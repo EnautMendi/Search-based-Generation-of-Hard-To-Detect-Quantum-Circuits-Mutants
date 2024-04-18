@@ -2,7 +2,7 @@
 ## Code
 The code used in the approach can be found under the [Code](Code/) folder. The following Python scripts can be found:
 
-- [mainStrong.py](Code/main.py) contains the main execution of the GA and RS.
+- [main.py](Code/main.py) contains the main execution of the GA and RS.
 - [generateMutants.py](Code/generateMutants.py) contains everything related to mutant generation.
 - [executeCircuit.py](Code/executeCircuit.py) contains everything related to quantum circuit execution.
 - [getResults.py](Code/getResults.py) Is the script used to check the results and perform the statistical tests.
