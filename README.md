@@ -1,4 +1,4 @@
-# Search-based hard-to-detect mutant generation
+# Search-based Generation of Hard-To-Detect Quantum Circuits Mutants
 ## Code
 The code used in the approach can be found under the [Code](Code/) folder. The following Python scripts can be found:
 
