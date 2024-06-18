@@ -38,6 +38,8 @@ def evalIndividual(individual):
 
     if num_tc == 0:
         fitness = 10000000
+    elif num_tc == strength:
+        fitness = num_tc
     else:
         fitness = num_tc + avg_dist
 
@@ -58,12 +60,12 @@ def mutate_subarray(individual, indpb):
 # Define a custom stopping criterion
 def customStoppingCriterion(logbook, strength):
     for record in logbook:
-        if record['best_fit'] <= strength:
+        if record['best_fit'] == strength:
             return True
     return False
 
 # Define an algorithm function that logs each generation
-def eaSimpleWithLogbook(log_file, strength, population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=None, verbose=__debug__):
+def eaSimpleWithLogbook(log_filename, population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=None, verbose=__debug__):
     logbook = tools.Logbook()
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else []) + ['best_fit']
 
@@ -82,7 +84,10 @@ def eaSimpleWithLogbook(log_file, strength, population, toolbox, cxpb, mutpb, ng
         logbook.record(gen=gen, nevals=len(offspring), **record)
         if verbose:
             print(logbook.stream)
+
+        log_file = open(log_filename, "a")
         log_file.write(f"{gen},{len(offspring)},{record['min']},{record['max']},{record['best_fit']}\n")
+        log_file.close()
 
         if customStoppingCriterion(logbook, strength):
             print(f"Stopping criterion met at generation {gen}")
@@ -93,11 +98,15 @@ def eaSimpleWithLogbook(log_file, strength, population, toolbox, cxpb, mutpb, ng
 # Define a function to save the hall of fame to a file
 def save_hall_of_fame(halloffame, filename):
     with open(filename, 'w') as f:
+        f.write("Individual, ")
+        for x in range(num_mutations):
+            f.write(f"Mutation_{x+1},Position_{x+1},Params_{x+1},")
+        f.write(f"Fitness\n")
         for i, individual in enumerate(halloffame):
-            f.write(f"Individual {i}:\n")
+            f.write(f"{i}, ")
             for subarray in individual:
-                f.write(f"Enum: {subarray[0].name}, Floats: {subarray[1:]}\n")
-            f.write(f"Fitness: {individual.fitness.values[0]}\n\n")
+                f.write(f"{subarray[0].name}, {subarray[1]}, {subarray[2:]}, ")
+            f.write(f"{individual.fitness.values[0]}\n")
 
 
 # Step 6: Define the main function
@@ -108,6 +117,7 @@ def start():
     global origin_qc
     global filename
     global shots
+    global strength
     shots = 1024
 
     parser = argparse.ArgumentParser(description="Mutant generation with GA")
@@ -159,8 +169,8 @@ def start():
     hof = tools.HallOfFame(100)
 
     # Add statistics
-    stats = tools.Statistics(lambda ind: ind.fitness.values)
-    #stats.register("avg", lambda x: sum(x) / len(x))
+    stats = tools.Statistics(lambda ind: ind.fitness.values[0])
+    stats.register("avg", lambda x: sum(x) / len(x))
     stats.register("min", min)
     stats.register("max", max)
 
@@ -169,11 +179,13 @@ def start():
     logbook.header = ["gen", "nevals"] + stats.fields + ["best_fit"]
 
     # Open a log file
-    log_file = open("evolution_log.txt", "a")
+    log_filename = "evolution_log.txt"
+    log_file = open(log_filename, "a")
     log_file.write("Generation,Evaluations,Avg,Min,Max,Best_Fit\n")
+    log_file.close()
 
     # Run the algorithm
-    population, logbook = eaSimpleWithLogbook(log_file, strength, population, toolbox, cxpb=0.5, mutpb=0.2, ngen=100, stats=stats,
+    population, logbook = eaSimpleWithLogbook(log_filename, population, toolbox, cxpb=0.5, mutpb=0.2, ngen=100, stats=stats,
                                               halloffame=hof, verbose=True)
     log_file.close()
 
