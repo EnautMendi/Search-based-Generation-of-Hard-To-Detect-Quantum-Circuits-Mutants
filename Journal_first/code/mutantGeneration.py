@@ -6,7 +6,11 @@ from enum import Enum
 # Define the Enum
 class mutations(Enum):
     u_gate = 0
-    #p_gate = 1
+    p_gate = 1
+    rx_gate = 2
+    ry_gate = 3
+    rz_gate = 4
+    replace_with_u_gate = 5
     #cx_gate = 2
 
 def getPositionGate(qc):
@@ -43,6 +47,50 @@ def generateInstructions(individual, position_gates_df):
                                    'New_gate': 'u',
                                    'Params': [], 'New_params': mutation[2:5], 'Qubits': (),
                                    'New_qubits': (position_gates_df[position_gates_df['Position'] == mutation[1]]['Qubits'].values[0][-1],)}
+                new_df = pd.DataFrame.from_dict(new_instruction, orient='index').T
+                df_instructions = pd.concat([df_instructions, new_df], ignore_index=True)
+            case mutations.p_gate:
+                new_instruction = {'Name': 'First_Mutant', 'Operator': 'Add', 'Position': mutation[1], 'Gate': 'Gap',
+                                   'New_gate': 'p',
+                                   'Params': [], 'New_params': [mutation[2],], 'Qubits': (),
+                                   'New_qubits': (
+                                   position_gates_df[position_gates_df['Position'] == mutation[1]]['Qubits'].values[0][-1],)}
+                new_df = pd.DataFrame.from_dict(new_instruction, orient='index').T
+                df_instructions = pd.concat([df_instructions, new_df], ignore_index=True)
+            case mutations.rx_gate:
+                new_instruction = {'Name': 'First_Mutant', 'Operator': 'Add', 'Position': mutation[1], 'Gate': 'Gap',
+                                   'New_gate': 'rx',
+                                   'Params': [], 'New_params': [mutation[2], ], 'Qubits': (),
+                                   'New_qubits': (
+                                       position_gates_df[position_gates_df['Position'] == mutation[1]]['Qubits'].values[
+                                           0][-1],)}
+                new_df = pd.DataFrame.from_dict(new_instruction, orient='index').T
+                df_instructions = pd.concat([df_instructions, new_df], ignore_index=True)
+            case mutations.ry_gate:
+                new_instruction = {'Name': 'First_Mutant', 'Operator': 'Add', 'Position': mutation[1], 'Gate': 'Gap',
+                                   'New_gate': 'ry',
+                                   'Params': [], 'New_params': [mutation[2], ], 'Qubits': (),
+                                   'New_qubits': (
+                                       position_gates_df[position_gates_df['Position'] == mutation[1]]['Qubits'].values[
+                                           0][-1],)}
+                new_df = pd.DataFrame.from_dict(new_instruction, orient='index').T
+                df_instructions = pd.concat([df_instructions, new_df], ignore_index=True)
+            case mutations.rz_gate:
+                new_instruction = {'Name': 'First_Mutant', 'Operator': 'Add', 'Position': mutation[1], 'Gate': 'Gap',
+                                   'New_gate': 'rz',
+                                   'Params': [], 'New_params': [mutation[2], ], 'Qubits': (),
+                                   'New_qubits': (
+                                       position_gates_df[position_gates_df['Position'] == mutation[1]]['Qubits'].values[
+                                           0][-1],)}
+                new_df = pd.DataFrame.from_dict(new_instruction, orient='index').T
+                df_instructions = pd.concat([df_instructions, new_df], ignore_index=True)
+            case mutations.replace_with_u_gate:
+                new_instruction = {'Name': 'First_Mutant', 'Operator': 'Replace', 'Position': mutation[1], 'Gate': 'Gap',
+                                   'New_gate': 'u',
+                                   'Params': [], 'New_params': mutation[2:5], 'Qubits': (),
+                                   'New_qubits': (
+                                   position_gates_df[position_gates_df['Position'] == mutation[1]]['Qubits'].values[0][
+                                       -1],)}
                 new_df = pd.DataFrame.from_dict(new_instruction, orient='index').T
                 df_instructions = pd.concat([df_instructions, new_df], ignore_index=True)
             case _:
