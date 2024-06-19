@@ -97,7 +97,7 @@ def eaSimpleWithLogbook(log_filename, population, toolbox, cxpb, mutpb, ngen, st
             print(f"Stopping criterion met at generation {gen} for GA")
             break
 
-    return population, logbook
+    return population, logbook, gen
 
 
 # Random Search Algorithm with Hall of Fame
@@ -107,38 +107,37 @@ def random_search_with_hof(log_filename, pop_size, num_generations, verbose=__de
     hall_of_fame = []
 
     if verbose:
-        print("gen     nevals     best_fit")
+        print("individual    fitness")
 
-    for gen in range(num_generations):
-        population = [init_individual(num_mutations) for _ in range(pop_size)]
+    population = [init_individual(num_mutations) for _ in range(pop_size*num_generations)]
 
-        for individual in population:
-            fitness = evalIndividual(individual)
-            if fitness[0] < best_fitness:
-                best_fitness = fitness[0]
-                best_individual = individual
+    for i, individual in enumerate(population):
+        fitness = evalIndividual(individual)
+        if fitness[0] < best_fitness:
+            best_fitness = fitness[0]
+            best_individual = individual
 
-            # Update hall of fame
-            if len(hall_of_fame) < pop_size:
-                hall_of_fame.append((individual, fitness))
-                hall_of_fame.sort(key=lambda x: x[1])
-            elif fitness < hall_of_fame[-1][1]:
-                hall_of_fame[-1] = (individual, fitness)
-                hall_of_fame.sort(key=lambda x: x[1])
+        # Update hall of fame
+        if len(hall_of_fame) < pop_size:
+            hall_of_fame.append((individual, fitness))
+            hall_of_fame.sort(key=lambda x: x[1])
+        elif fitness < hall_of_fame[-1][1]:
+            hall_of_fame[-1] = (individual, fitness)
+            hall_of_fame.sort(key=lambda x: x[1])
 
         if verbose:
-            print(f"{gen}       {pop_size}     {best_fitness}")
+            print(f"{i}     {fitness[0]}")
 
         log_file = open(log_filename, "a")
-        log_file.write(f"{gen},{pop_size},{best_fitness}\n")
+        log_file.write(f"{i},{fitness[0]}\n")
         log_file.close()
 
         if best_fitness == strength:
-            print(f"Stopping criterion met at generation {gen} for RS")
+            print(f"Stopping criterion met at individual {i} for RS")
             break
 
 
-    return best_individual, best_fitness, hall_of_fame
+    return best_individual, best_fitness, hall_of_fame, i
 
 # Define a function to save the hall of fame to a file
 def save_hall_of_fame(halloffame, filename):
@@ -153,6 +152,18 @@ def save_hall_of_fame(halloffame, filename):
                 f.write(f"{subarray[0].name}, {subarray[1]}, {subarray[2:]}, ")
             f.write(f"{individual.fitness.values[0]}\n")
 
+def save_hall_of_fame_RS(halloffame, filename):
+    with open(filename, 'w') as f:
+        f.write("Individual, ")
+        for x in range(num_mutations):
+            f.write(f"Mutation_{x+1},Position_{x+1},Params_{x+1},")
+        f.write(f"Fitness\n")
+        for i, individual in enumerate(halloffame):
+            f.write(f"{i}, ")
+            for subarray in individual[0]:
+                f.write(f"{subarray[0].name}, {subarray[1]}, {subarray[2:]}, ")
+            f.write(f"{individual[1]}\n")
+
 
 # Step 6: Define the main function
 def start():
@@ -165,7 +176,7 @@ def start():
     global strength
     shots = 1024
     num_gen = 100
-    pop_size = 100
+    pop_size = 20
 
     parser = argparse.ArgumentParser(description="Mutant generation with GA")
     parser.add_argument("origin_file", help="Original file")
@@ -214,6 +225,12 @@ def start():
     # Register custom mutation
     toolbox.register("mutate", mutate_subarray, indpb=0.2)
 
+    # Open a results file
+    results_filename = f"results\\{foldername}\\all_results.txt"
+    results_file = open(results_filename, "a")
+    results_file.write("Run,GA_F,GA_g,RS_F,RS_i\n")
+    results_file.close()
+
     for run in range(runs):
 
         # Create population
@@ -226,7 +243,7 @@ def start():
         stats.register("max", max)
 
         # Add a hall of fame to store the best individuals
-        hof = tools.HallOfFame(100)
+        hof = tools.HallOfFame(pop_size)
 
         # Add a logbook to track statistics
         logbook = tools.Logbook()
@@ -239,7 +256,7 @@ def start():
         log_file_GA.close()
 
         # Run the algorithm
-        population, logbook = eaSimpleWithLogbook(log_filename_GA, population, toolbox, cxpb=0.5, mutpb=0.2, ngen=100, stats=stats,
+        population, logbook, generation = eaSimpleWithLogbook(log_filename_GA, population, toolbox, cxpb=0.5, mutpb=0.2, ngen=100, stats=stats,
                                                   halloffame=hof, verbose=True)
 
         best_ind = tools.selBest(population, 1)[0]
@@ -254,12 +271,16 @@ def start():
         log_file_RS.write("Generation,Evaluations,Best_Fit\n")
         log_file_RS.close()
 
-        best_individual_RS, best_fitness_RS, hall_of_fame_RS = random_search_with_hof(log_filename_RS, pop_size, num_gen, verbose=True)
+        best_individual_RS, best_fitness_RS, hall_of_fame_RS, evaluation = random_search_with_hof(log_filename_RS, pop_size, num_gen, verbose=True)
 
         print(f"Best Individual RS: {best_individual_RS}, Fitness: {best_fitness_RS}")
 
         # Save the hall of fame to a file
-        save_hall_of_fame(hall_of_fame_RS, f"results\\{foldername}\\hall_of_fame_RS_{run}.txt")
+        save_hall_of_fame_RS(hall_of_fame_RS, f"results\\{foldername}\\hall_of_fame_RS_{run}.txt")
+
+        results_file = open(results_filename, "a")
+        results_file.write(f"{run},{best_ind.fitness.values[0]},{generation},{best_fitness_RS},{evaluation}\n")
+        results_file.close()
 
 
 
