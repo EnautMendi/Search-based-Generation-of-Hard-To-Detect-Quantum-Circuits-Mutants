@@ -1,6 +1,7 @@
 import argparse
 import random
 import numpy as np
+import pathlib
 
 import pandas as pd
 from deap import base, creator, tools, algorithms
@@ -165,24 +166,27 @@ def start():
     shots = 1024
     num_gen = 100
     pop_size = 100
-    runs = 5
 
     parser = argparse.ArgumentParser(description="Mutant generation with GA")
     parser.add_argument("origin_file", help="Original file")
     parser.add_argument("oracle_file", help="Oracle output of original file")
     parser.add_argument("num_mutations", help="Number of mutations to apply each time")
     parser.add_argument("strength", help="Number of test cases to reach")
+    parser.add_argument("runs", help="Number of runs for each algorithm")
     args = parser.parse_args()
 
     origin_file = args.origin_file
     oracle_file = args.oracle_file
     num_mutations = int(args.num_mutations)
     strength = int(args.strength)
+    runs = int(args.runs)
 
     oracle_df = pd.read_csv(oracle_file)
     origin_qc = QuantumCircuit.from_qasm_file(origin_file)
     position_gates_df = getPositionGate(origin_qc)
-    filename = origin_file.split('/')[-1]
+    filename = origin_file.split("\\")[-1]
+    foldername = filename.replace('.qasm','')
+    pathlib.Path(f'.\\results\\{foldername}').mkdir(parents=True,exist_ok=True)
 
     # dirname = r"GA_Strong/" + str(algo_name) + "/" + filename.split('.')[0]
     # os.makedirs(dirname, exist_ok=True)
@@ -229,7 +233,7 @@ def start():
         logbook.header = ["gen", "nevals"] + stats.fields + ["best_fit"]
 
         # Open a log file
-        log_filename_GA = f"evolution_log_GA_{run}.txt"
+        log_filename_GA = f"results\\{foldername}\\evolution_log_GA_{run}.txt"
         log_file_GA = open(log_filename_GA, "a")
         log_file_GA.write("Generation,Evaluations,Avg,Min,Max,Best_Fit\n")
         log_file_GA.close()
@@ -242,10 +246,10 @@ def start():
         print(f"Best Individual: {best_ind}, Fitness: {best_ind.fitness.values[0]}")
 
         # Save the hall of fame to a file
-        save_hall_of_fame(hof, f"hall_of_fame_GA_{run}.txt")
+        save_hall_of_fame(hof, f"results\\{foldername}\\hall_of_fame_GA_{run}.txt")
 
         # Open a log file
-        log_filename_RS = f"evolution_log_RS_{run}.txt"
+        log_filename_RS = f"results\\{foldername}\\evolution_log_RS_{run}.txt"
         log_file_RS = open(log_filename_RS, "a")
         log_file_RS.write("Generation,Evaluations,Best_Fit\n")
         log_file_RS.close()
@@ -255,7 +259,7 @@ def start():
         print(f"Best Individual RS: {best_individual_RS}, Fitness: {best_fitness_RS}")
 
         # Save the hall of fame to a file
-        save_hall_of_fame(hall_of_fame_RS, f"hall_of_fame_RS_{run}.txt")
+        save_hall_of_fame(hall_of_fame_RS, f"results\\{foldername}\\hall_of_fame_RS_{run}.txt")
 
 
 
