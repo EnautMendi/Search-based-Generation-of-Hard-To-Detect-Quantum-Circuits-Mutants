@@ -174,7 +174,6 @@ def start():
     global filename
     global shots
     global strength
-    shots = 1024
     num_gen = 100
     pop_size = 20
 
@@ -199,11 +198,9 @@ def start():
     foldername = filename.replace('.qasm','')
     pathlib.Path(f'.\\results\\{foldername}').mkdir(parents=True,exist_ok=True)
 
-    # dirname = r"GA_Strong/" + str(algo_name) + "/" + filename.split('.')[0]
-    # os.makedirs(dirname, exist_ok=True)
-    # os.makedirs(dirname + '/GA_Results', exist_ok=True)
-    # os.makedirs(dirname + '/logs', exist_ok=True)
-    # os.makedirs(dirname + '/randomSearch', exist_ok=True)
+    shots = 2 ** origin_qc.num_qubits * 2
+    if shots < 1024:
+        shots = 1024
 
     # Create Custom Individual
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
@@ -256,7 +253,7 @@ def start():
         log_file_GA.close()
 
         # Run the algorithm
-        population, logbook, generation = eaSimpleWithLogbook(log_filename_GA, population, toolbox, cxpb=0.5, mutpb=0.2, ngen=100, stats=stats,
+        population, logbook, generation = eaSimpleWithLogbook(log_filename_GA, population, toolbox, cxpb=0.5, mutpb=0.2, ngen=num_gen, stats=stats,
                                                   halloffame=hof, verbose=True)
 
         best_ind = tools.selBest(population, 1)[0]
