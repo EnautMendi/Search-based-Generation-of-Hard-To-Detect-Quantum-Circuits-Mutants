@@ -102,7 +102,7 @@ def generateInstructions(individual, position_gates_df):
 def createHighMutant(instructions, qc):
     add = False
     sorted_instructions = instructions.sort_values(by='Position')
-    mutant = QuantumCircuit(qc.qubits, qc.clbits)
+    mutant = qc.copy_empty_like()
     mutated = 0
     for x, gate in enumerate(qc.data):
         if not sorted_instructions[sorted_instructions['Position'] == int(x)].empty:
