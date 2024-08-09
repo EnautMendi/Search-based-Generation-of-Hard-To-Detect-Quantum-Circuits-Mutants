@@ -11,25 +11,30 @@ def getExecResults(qc, shots, filename):
     inputs = createInputs(qc.num_qubits)
     columns = ['file', 'shots', 'input', 'counts']
     results_df = pd.DataFrame(columns=columns)
+    intitialized_circuits = dict()
     for input in inputs:
         qc_init = circuitInitialization(qc, input)
-        results = execute_circuit(qc_init, shots)
-        new_row = {'file': filename, 'shots': shots, 'input': ("'" + str(input) + "'"), 'counts': results}
+        intitialized_circuits[input] = qc_init
+
+    results = execute_circuit(list(intitialized_circuits.values()), shots)
+
+    for input in inputs:
+        counts = results.get_counts(intitialized_circuits[input])
+        new_row = {'file': filename, 'shots': shots, 'input': ("'" + str(input) + "'"), 'counts': counts}
         new_df = pd.DataFrame.from_dict(new_row, orient='index').T
         results_df = pd.concat([results_df, new_df], ignore_index=True)
 
     return results_df
 
-def execute_circuit(qc, shots):
+def execute_circuit(intitialized_circuits, shots):
     backend = BasicProvider().get_backend("basic_simulator")
 
     # Compile and run the Quantum circuit on a local simulator backend
-    new_circuit = transpile(qc, backend)
-    job = backend.run(new_circuit, shots=shots, seed_simulator=42)
-    result = job.result()
-    counts = result.get_counts()
+    new_circuits = transpile(intitialized_circuits, backend)
+    job = backend.run(new_circuits, shots=shots, seed_simulator=42)
+    results = job.result()
 
-    return counts
+    return results
 
 def compareOutputs(oracle_output, mutant_output):
     result = False
